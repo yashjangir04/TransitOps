@@ -1,20 +1,24 @@
-const express = require("express");
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+dotenv.config();
+
+const authRoutes = require('./routes/authRoutes');
+const tripRoutes = require('./routes/tripRoutes');
+
 const app = express();
-const cors = require("cors");
 
-const PORT = process.env.PORT || 3000;
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.use(cors(
-    {
-      origin: "*",
-      credentials: true,
-    }
-));
+app.use('/api/auth', authRoutes);
+// app.use('/api/trips', tripRoutes);
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port: ${PORT}`);
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Server running on port: ${port}`);
 });
