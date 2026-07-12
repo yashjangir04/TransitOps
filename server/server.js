@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/auth', authRoutes);
-app.use('/api/trips', authRoutes);
+// app.use('/api/trips', tripRoutes);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
