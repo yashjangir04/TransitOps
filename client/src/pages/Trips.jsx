@@ -111,38 +111,37 @@ export default function Trips() {
           </div>
         </form>
 
-        {/* Live board */}
-        <div data-testid="trip-live-board" className="to-card p-5">
-          <div className="text-sm font-bold text-slate-900 mb-3">Live board</div>
-          <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1">
-            {trips.slice().reverse().map((t) => (
-              <div key={t.id} className="border border-gray-100 rounded-lg p-3 hover:bg-gray-50 transition">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="font-mono text-sm font-bold text-slate-900">{t.id}</div>
+        <div data-testid="trip-live-board" className="to-card overflow-hidden">
+          <div className="px-5 py-3 border-b border-gray-100 text-sm font-bold text-slate-900">Live board</div>
+          <div className="divide-y divide-slate-100 max-h-[520px] overflow-y-auto">
+            {trips.slice().reverse().map((t, i) => (
+              <div key={t.id} className={`px-5 py-4 transition-colors ${i % 2 === 0 ? "bg-white" : "bg-slate-50"} hover:bg-amber-50`}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="font-mono text-sm font-bold text-slate-800">{t.id}</div>
                   <StatusBadge status={t.status} />
                 </div>
-                <div className="text-xs text-gray-600">
-                  {t.source} <span className="text-gray-400">→</span> {t.destination}
+                <div className="text-xs text-slate-600 mb-1.5">
+                  {t.source} <span className="text-slate-400">→</span> {t.destination}
                 </div>
-                <div className="text-xs text-gray-500 mt-1 flex items-center gap-3">
-                  <span>Vehicle: <b className="text-slate-800">{nameOf(t.vehicleId, vehicles)}</b></span>
-                  <span>Driver: <b className="text-slate-800">{nameOf(t.driverId, drivers)}</b></span>
-                  <span className="ml-auto tabular-nums">{t.cargoWeight}kg · {t.plannedDistance}km</span>
+                <div className="text-xs text-slate-500 flex items-center gap-3">
+                  <span>Vehicle: <b className="text-slate-700">{nameOf(t.vehicleId, vehicles)}</b></span>
+                  <span>Driver: <b className="text-slate-700">{nameOf(t.driverId, drivers)}</b></span>
+                  <span className="ml-auto tabular-nums text-slate-400">{t.cargoWeight}kg · {t.plannedDistance}km</span>
                 </div>
-                <div className="mt-2 flex items-center gap-2">
+                <div className="mt-2.5 flex items-center gap-2">
                   {t.status === "Draft" && (
-                    <button onClick={() => dispatchTrip(t.id)} data-testid={`dispatch-${t.id}`} className="text-xs font-bold inline-flex items-center gap-1 text-indigo-700 hover:underline"><Send size={12} /> Dispatch</button>
+                    <button onClick={() => dispatchTrip(t.id)} data-testid={`dispatch-${t.id}`} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition"><Send size={11} /> Dispatch</button>
                   )}
                   {(t.status === "On Trip" || t.status === "Dispatched") && (
-                    <button onClick={() => completeTrip(t.id)} data-testid={`complete-${t.id}`} className="text-xs font-bold inline-flex items-center gap-1 text-emerald-700 hover:underline"><CheckCircle2 size={12} /> Complete</button>
+                    <button onClick={() => completeTrip(t.id)} data-testid={`complete-${t.id}`} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition"><CheckCircle2 size={11} /> Complete</button>
                   )}
                   {t.status !== "Completed" && t.status !== "Cancelled" && (
-                    <button onClick={() => cancelTrip(t.id)} data-testid={`cancel-${t.id}`} className="text-xs font-bold inline-flex items-center gap-1 text-rose-600 hover:underline ml-auto"><X size={12} /> Cancel</button>
+                    <button onClick={() => cancelTrip(t.id)} data-testid={`cancel-${t.id}`} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md border border-rose-200 text-rose-600 bg-rose-50 hover:bg-rose-100 transition ml-auto"><X size={11} /> Cancel</button>
                   )}
                 </div>
               </div>
             ))}
-            {trips.length === 0 && <div className="text-center text-sm text-gray-500 py-10">No trips yet.</div>}
+            {trips.length === 0 && <div className="px-5 py-12 text-center text-sm text-gray-400">No trips yet.</div>}
           </div>
         </div>
       </div>

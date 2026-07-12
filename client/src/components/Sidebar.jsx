@@ -31,11 +31,9 @@ export default function Sidebar() {
       data-testid="sidebar"
       className="w-60 shrink-0 bg-white border-r border-gray-200 flex flex-col"
     >
-      <div className="px-5 py-5 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-md bg-slate-900 flex items-center justify-center">
-            <div className="w-3 h-3 bg-amber-400 rounded-sm" />
-          </div>
+      <div className="px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center gap-2.5">
+          <img src="/logo.png" alt="TransitOps Logo" className="w-10 h-10 object-contain" />
           <div>
             <div className="font-extrabold text-slate-900 tracking-tight text-lg leading-none">
               TransitOps

@@ -57,32 +57,40 @@ export default function Maintenance() {
         <div className="to-card overflow-hidden">
           <div className="px-5 py-3 border-b border-gray-100 text-sm font-bold text-slate-900">Service log</div>
           <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="to-th">Vehicle</th>
-                <th className="to-th">Service</th>
-                <th className="to-th">Cost</th>
-                <th className="to-th">Date</th>
-                <th className="to-th">Status</th>
-                <th className="to-th text-right">Action</th>
+            <thead>
+              <tr className="bg-slate-200">
+                <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Vehicle</th>
+                <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Service</th>
+                <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Cost</th>
+                <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Date</th>
+                <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Status</th>
+                <th className="px-5 py-3.5 text-right text-[11px] font-bold text-slate-500 uppercase tracking-widest">Action</th>
               </tr>
             </thead>
             <tbody data-testid="maint-table">
-              {maintenance.map((m) => (
-                <tr key={m.id} className="hover:bg-gray-50 transition">
-                  <td className="to-td font-semibold text-slate-900">{nameOf(m.vehicleId)}</td>
-                  <td className="to-td">{m.service}</td>
-                  <td className="to-td tabular-nums">₹{m.cost.toLocaleString()}</td>
-                  <td className="to-td">{m.date}</td>
-                  <td className="to-td"><StatusBadge status={m.status} /></td>
-                  <td className="to-td text-right">
+              {maintenance.map((m, i) => (
+                <tr key={m.id} className={`transition-colors ${i % 2 === 0 ? "bg-white" : "bg-slate-100"} hover:bg-amber-50`}>
+                  <td className="px-5 py-4 text-sm font-semibold text-slate-800">{nameOf(m.vehicleId)}</td>
+                  <td className="px-5 py-4 text-sm text-slate-600">{m.service}</td>
+                  <td className="px-5 py-4 text-sm tabular-nums text-slate-600">₹{m.cost.toLocaleString()}</td>
+                  <td className="px-5 py-4 text-sm text-slate-600">{m.date}</td>
+                  <td className="px-5 py-4"><StatusBadge status={m.status} /></td>
+                  <td className="px-5 py-4 text-right">
                     {m.status === "In Shop" && (
-                      <button data-testid={`maint-close-${m.id}`} onClick={() => closeMaintenance(m.id)} className="text-xs font-semibold text-emerald-700 hover:underline">Close &amp; return to service</button>
+                      <div className="inline-flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                        <button
+                          data-testid={`maint-close-${m.id}`}
+                          onClick={() => closeMaintenance(m.id)}
+                          className="px-3 py-1.5 text-xs font-semibold text-emerald-600 hover:bg-emerald-50 transition"
+                        >Close &amp; return to service</button>
+                      </div>
                     )}
                   </td>
                 </tr>
               ))}
-              {maintenance.length === 0 && <tr><td className="to-td text-center text-gray-500 py-10" colSpan={6}>No records.</td></tr>}
+              {maintenance.length === 0 && (
+                <tr><td className="px-5 py-12 text-center text-gray-400 text-sm" colSpan={6}>No records.</td></tr>
+              )}
             </tbody>
           </table>
         </div>
