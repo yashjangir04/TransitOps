@@ -16,8 +16,8 @@ const empty = {
 export default function Fleet() {
   const { vehicles, addVehicle, deleteVehicle, updateVehicle, trips } = useApp();
   const [q, setQ] = useState("");
-  const [type, setType] = useState("All");
-  const [status, setStatus] = useState("All");
+  const [type, setType] = useState("Type: All");
+  const [status, setStatus] = useState("Status: All");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(empty);
   const [error, setError] = useState("");
@@ -26,8 +26,8 @@ export default function Fleet() {
     () =>
       vehicles.filter(
         (v) =>
-          (type === "All" || v.type === type) &&
-          (status === "All" || v.status === status) &&
+          (type === "Type: All" || v.type === type.replace("Type: ", "")) &&
+          (status === "Status: All" || v.status === status.replace("Status: ", "")) &&
           (q === "" ||
             v.regNo.toLowerCase().includes(q.toLowerCase()) ||
             v.name.toLowerCase().includes(q.toLowerCase())),
@@ -67,10 +67,10 @@ export default function Fleet() {
       {/* filters */}
       <div className="to-card p-4 flex flex-wrap items-center gap-3">
         <select value={type} onChange={(e) => setType(e.target.value)} className="to-input w-auto min-w-[140px]" data-testid="fleet-filter-type">
-          <option>All</option><option>Van</option><option>Truck</option><option>Mini</option>
+          <option>Type: All</option><option>Type: Van</option><option>Type: Truck</option><option>Type: Mini</option>
         </select>
         <select value={status} onChange={(e) => setStatus(e.target.value)} className="to-input w-auto min-w-[140px]" data-testid="fleet-filter-status">
-          <option>All</option><option>Available</option><option>On Trip</option><option>In Shop</option><option>Retired</option>
+          <option>Status: All</option><option>Status: Available</option><option>Status: On Trip</option><option>Status: In Shop</option><option>Status: Retired</option>
         </select>
         <input
           data-testid="fleet-search"
