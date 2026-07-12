@@ -1,6 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
- 
+const prismaClient = require('../config/db');
+
 exports.getVehicles = async (req, res) => {
     try {
         const { type, status, search } = req.query;
@@ -22,7 +21,7 @@ exports.getVehicles = async (req, res) => {
             };
         }
 
-        const vehicles = await prisma.vehicle.findMany({
+        const vehicles = await prismaClient.vehicle.findMany({
             where: whereClause,
             orderBy: {
                 createdAt: 'desc'
@@ -41,6 +40,7 @@ exports.getVehicles = async (req, res) => {
  
 exports.createVehicle = async (req, res) => {
     try {
+        console.log(req.body);
         const { 
             registrationNumber, 
             model, 
@@ -51,7 +51,7 @@ exports.createVehicle = async (req, res) => {
             status 
         } = req.body; 
 
-        const existingVehicle = await prisma.vehicle.findUnique({
+        const existingVehicle = await prismaClient.vehicle.findUnique({
             where: { registrationNumber }
         });
 
@@ -62,7 +62,7 @@ exports.createVehicle = async (req, res) => {
             });
         }
  
-        const vehicle = await prisma.vehicle.create({
+        const vehicle = await prismaClient.vehicle.create({
             data: {
                 registrationNumber,
                 model,

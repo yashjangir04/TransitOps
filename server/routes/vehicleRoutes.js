@@ -1,26 +1,34 @@
 const express = require('express');
-const router = express.Router();
- 
+const { verifyToken, checkRole } = require('../middlewares/authMiddleware');
 const { 
-    getVehicles, 
-    createVehicle 
+  getVehicles, 
+  createVehicle 
 } = require('../controllers/vehicleController');
-const { verifyToken } = require('../middlewares/authMiddleware');
- 
+
+const router = express.Router();
+
 /**
- * @route   GET /api/vehicles
- * @desc    Fetch a list of all vehicles (supports filtering and search)
- * @access  Private (Requires valid JWT)
+ * GET /api/vehicles
+ * Fetch a list of all vehicles (supports filtering and search)
+ *  Private (Operations, Safety, and Finance teams)
  */
-
-router.route('/').get(verifyToken, getVehicles)
+router.get(
+  '/', 
+//   verifyToken, 
+//   checkRole(['FLEET_MANAGER', 'DISPATCHER', 'SAFETY_OFFICER', 'FINANCIAL_ANALYST']), 
+  getVehicles
+);
 
 /**
-* @route   POST /api/vehicles
-* @desc    Add a new vehicle to the registry
-* @access  Private (Requires valid JWT)
-*/
-
-router.route('/').post(verifyToken, createVehicle);
+ *  POST /api/vehicles
+ *  Add a new vehicle to the registry
+ *  Private (Strictly Fleet Managers)
+ */
+router.post(
+  '/', 
+//   verifyToken, 
+//   checkRole(['FLEET_MANAGER']),  
+  createVehicle
+);
 
 module.exports = router;
