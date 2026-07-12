@@ -43,24 +43,22 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Dashboard</h1>
-          <p className="text-sm text-gray-500">Fleet snapshot &amp; today&apos;s activity.</p>
-        </div>
-      </div>
+      {/* Header removed */}
 
       {/* Filters */}
-      <div data-testid="dashboard-filters" className="to-card p-4 flex flex-wrap gap-3">
-        <select value={type} onChange={(e) => setType(e.target.value)} className="to-input w-auto min-w-[160px]" data-testid="filter-type">
-          <option>All</option><option>Van</option><option>Truck</option><option>Mini</option>
-        </select>
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className="to-input w-auto min-w-[160px]" data-testid="filter-status">
-          <option>All</option><option>Available</option><option>On Trip</option><option>In Shop</option><option>Retired</option>
-        </select>
-        <select value={region} onChange={(e) => setRegion(e.target.value)} className="to-input w-auto min-w-[160px]" data-testid="filter-region">
-          <option>All</option><option>North</option><option>South</option><option>East</option><option>West</option>
-        </select>
+      <div>
+        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Filters</div>
+        <div data-testid="dashboard-filters" className="to-card p-4 flex flex-wrap gap-3">
+          <select value={type} onChange={(e) => setType(e.target.value)} className="to-input w-auto min-w-[160px]" data-testid="filter-type">
+            <option value="All">Vehicle Type: All</option><option value="Van">Van</option><option value="Truck">Truck</option><option value="Mini">Mini</option>
+          </select>
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className="to-input w-auto min-w-[160px]" data-testid="filter-status">
+            <option value="All">Status: All</option><option value="Available">Available</option><option value="On Trip">On Trip</option><option value="In Shop">In Shop</option><option value="Retired">Retired</option>
+          </select>
+          <select value={region} onChange={(e) => setRegion(e.target.value)} className="to-input w-auto min-w-[160px]" data-testid="filter-region">
+            <option value="All">Region: All</option><option value="North">North</option><option value="South">South</option><option value="East">East</option><option value="West">West</option>
+          </select>
+        </div>
       </div>
 
       {/* KPI grid */}
