@@ -89,55 +89,105 @@ export default function Drivers() {
 
       <div className="to-card overflow-x-auto">
         <table className="w-full min-w-[900px]">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="to-th">Driver</th>
-              <th className="to-th">License no.</th>
-              <th className="to-th">Category</th>
-              <th className="to-th">Expiry</th>
-              <th className="to-th">Contact</th>
-              <th className="to-th">Trips</th>
-              <th className="to-th">Safety</th>
-              <th className="to-th">Status</th>
-              <th className="to-th text-right">Actions</th>
+          <thead>
+            <tr className="bg-slate-200">
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Driver</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">License No.</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Category</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Expiry</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Contact</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Trips</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Safety</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Status</th>
+              <th className="px-5 py-3.5 text-right text-[11px] font-bold text-slate-500 uppercase tracking-widest">Actions</th>
             </tr>
           </thead>
           <tbody data-testid="drivers-table">
-            {rows.map((d) => (
-              <tr key={d.id} className="hover:bg-gray-50 transition">
-                <td className="to-td font-semibold text-slate-900">{d.name}</td>
-                <td className="to-td font-mono">{d.licenseNo}</td>
-                <td className="to-td">{d.category}</td>
-                <td className="to-td">
-                  <span className={isExpired(d) ? "text-red-600 font-semibold" : ""}>{d.expiry} {isExpired(d) && "· expired"}</span>
+            {rows.map((d, i) => (
+              <tr key={d.id} className={`transition-colors ${i % 2 === 0 ? "bg-white" : "bg-slate-100"} hover:bg-amber-50`}>
+                <td className="px-5 py-4 text-sm font-semibold text-slate-800">{d.name}</td>
+                <td className="px-5 py-4 text-sm font-mono text-slate-600">{d.licenseNo}</td>
+                <td className="px-5 py-4 text-sm">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-600">{d.category}</span>
                 </td>
-                <td className="to-td text-gray-600">{d.contact}</td>
-                <td className="to-td tabular-nums">{d.tripsCompleted}</td>
-                <td className="to-td">
-                  <div className="flex items-center gap-2">
-                    <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className={`h-full ${d.safetyScore > 90 ? "bg-emerald-500" : d.safetyScore > 80 ? "bg-amber-500" : "bg-red-500"}`} style={{ width: `${d.safetyScore}%` }} />
+                <td className="px-5 py-4 text-sm">
+                  {isExpired(d) ? (
+                    <span className="inline-flex items-center gap-1.5 text-red-500 font-semibold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span>
+                      {d.expiry} · expired
+                    </span>
+                  ) : (
+                    <span className="text-slate-600">{d.expiry}</span>
+                  )}
+                </td>
+                <td className="px-5 py-4 text-sm text-slate-500">{d.contact}</td>
+                <td className="px-5 py-4 text-sm tabular-nums font-semibold text-slate-700">{d.tripsCompleted}</td>
+                <td className="px-5 py-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-20 h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${d.safetyScore > 90 ? "bg-emerald-500" : d.safetyScore > 80 ? "bg-amber-400" : "bg-red-500"}`}
+                        style={{ width: `${d.safetyScore}%` }}
+                      />
                     </div>
-                    <span className="text-xs tabular-nums font-mono">{d.safetyScore}%</span>
+                    <span className="text-xs font-semibold tabular-nums text-slate-600">{d.safetyScore}%</span>
                   </div>
                 </td>
-                <td className="to-td"><StatusBadge status={d.status} /></td>
-                <td className="to-td text-right">
-                  {d.status !== "Suspended" ? (
-                    <button className="text-xs text-orange-600 font-semibold hover:underline mr-3" data-testid={`drivers-suspend-${d.id}`} onClick={() => updateDriver(d.id, { status: "Suspended" })}>Suspend</button>
-                  ) : (
-                    <button className="text-xs text-emerald-600 font-semibold hover:underline mr-3" data-testid={`drivers-reinstate-${d.id}`} onClick={() => updateDriver(d.id, { status: "Available" })}>Reinstate</button>
+                <td className="px-5 py-4">
+                  {d.status === "Available" && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Available
+                    </span>
                   )}
-                  <button className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 hover:underline" data-testid={`drivers-delete-${d.id}`} onClick={() => deleteDriver(d.id)}><Trash2 size={12} /> Delete</button>
+                  {d.status === "Suspended" && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>Suspended
+                    </span>
+                  )}
+                  {d.status === "On Trip" && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>On Trip
+                    </span>
+                  )}
+                  {d.status === "Off Duty" && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>Off Duty
+                    </span>
+                  )}
+                </td>
+                <td className="px-5 py-4 text-right">
+                  <div className="inline-flex items-center gap-1 divide-x divide-gray-200 border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                    {d.status !== "Suspended" ? (
+                      <button
+                        className="px-3 py-1.5 text-xs font-semibold text-orange-600 hover:bg-orange-50 transition"
+                        data-testid={`drivers-suspend-${d.id}`}
+                        onClick={() => updateDriver(d.id, { status: "Suspended" })}
+                      >Suspend</button>
+                    ) : (
+                      <button
+                        className="px-3 py-1.5 text-xs font-semibold text-emerald-600 hover:bg-emerald-50 transition"
+                        data-testid={`drivers-reinstate-${d.id}`}
+                        onClick={() => updateDriver(d.id, { status: "Available" })}
+                      >Reinstate</button>
+                    )}
+                    <button
+                      className="px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition flex items-center gap-1"
+                      data-testid={`drivers-delete-${d.id}`}
+                      onClick={() => deleteDriver(d.id)}
+                    ><Trash2 size={11} /> Delete</button>
+                  </div>
                 </td>
               </tr>
             ))}
-            {rows.length === 0 && <tr><td className="to-td text-center text-gray-500 py-10" colSpan={9}>No drivers.</td></tr>}
+            {rows.length === 0 && (
+              <tr><td className="px-5 py-12 text-center text-gray-400 text-sm" colSpan={9}>No drivers found.</td></tr>
+            )}
           </tbody>
         </table>
       </div>
     </div>
   );
 }
+
 
 

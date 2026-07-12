@@ -1,3 +1,4 @@
+// This is the DashBoard of the TransitOps
 import React, { useMemo, useState } from "react";
 import { useApp } from "@/context/AppContext";
 import KpiCard from "@/components/KpiCard";
@@ -97,27 +98,28 @@ export default function Dashboard() {
             <div className="text-xs text-gray-500">{recentTrips.length} shown</div>
           </div>
           <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="to-th">Trip</th>
-                <th className="to-th">Vehicle</th>
-                <th className="to-th">Driver</th>
-                <th className="to-th">Status</th>
-                <th className="to-th">ETA</th>
+            <thead>
+              <tr className="bg-slate-200">
+                <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Trip</th>
+                <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Vehicle</th>
+                <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Driver</th>
+                <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Status</th>
+                <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">ETA</th>
               </tr>
             </thead>
             <tbody data-testid="dashboard-recent-trips">
-              {recentTrips.map((t) => (
-                <tr key={t.id} className="hover:bg-gray-50 transition">
-                  <td className="to-td font-mono text-slate-900 font-semibold">{t.id}</td>
-                  <td className="to-td">{nameOf(t.vehicleId, vehicles)}</td>
-                  <td className="to-td">{nameOf(t.driverId, drivers)}</td>
-                  <td className="to-td"><StatusBadge status={t.status} /></td>
-                  <td className="to-td text-gray-600">{t.status === "Completed" ? "—" : t.plannedDistance ? `~${t.plannedDistance} km` : "Awaiting vehicle"}</td>
+              {recentTrips.map((t, i) => (
+                <tr key={t.id} className={`transition-colors ${i % 2 === 0 ? "bg-white" : "bg-slate-100"} hover:bg-amber-50`}>
+                  <td className="px-5 py-4 text-sm font-mono font-semibold text-slate-800">{t.id}</td>
+                  <td className="px-5 py-4 text-sm text-slate-600">{nameOf(t.vehicleId, vehicles)}</td>
+                  <td className="px-5 py-4 text-sm text-slate-600">{nameOf(t.driverId, drivers)}</td>
+                  <td className="px-5 py-4"><StatusBadge status={t.status} /></td>
+                  <td className="px-5 py-4 text-sm text-slate-500">{t.status === "Completed" ? "—" : t.plannedDistance ? `~${t.plannedDistance} km` : "Awaiting vehicle"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+
         </div>
 
         <div className="to-card p-5">

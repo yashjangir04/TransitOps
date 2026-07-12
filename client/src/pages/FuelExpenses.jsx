@@ -77,9 +77,12 @@ export default function FuelExpenses() {
           </form>
         </div>
         <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="to-th">Vehicle</th><th className="to-th">Date</th><th className="to-th">Liters</th><th className="to-th">Cost</th>
+          <thead>
+            <tr className="bg-slate-200">
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Vehicle</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Date</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Liters</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Cost</th>
             </tr>
           </thead>
           <tbody data-testid="fuel-table">
@@ -116,23 +119,29 @@ export default function FuelExpenses() {
           </form>
         </div>
         <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="to-th">Trip</th><th className="to-th">Vehicle</th><th className="to-th">Toll</th><th className="to-th">Misc</th><th className="to-th">Allowance</th><th className="to-th">Total</th><th className="to-th">Status</th>
+          <thead>
+            <tr className="bg-slate-200">
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Trip</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Vehicle</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Toll</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Misc</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Allowance</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Total</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Status</th>
             </tr>
           </thead>
           <tbody data-testid="expense-table">
-            {filteredExpenses.map((x) => {
+            {filteredExpenses.map((x, i) => {
               const trip = trips.find((t) => t.id === x.tripId);
               return (
-                <tr key={x.id} className="hover:bg-gray-50">
-                  <td className="to-td font-mono">{x.tripId}</td>
-                  <td className="to-td font-semibold text-slate-900">{nameOfVeh(x.vehicleId)}</td>
-                  <td className="to-td tabular-nums">₹{x.toll.toLocaleString()}</td>
-                  <td className="to-td tabular-nums">₹{x.misc.toLocaleString()}</td>
-                  <td className="to-td tabular-nums">₹{x.driverAllowance.toLocaleString()}</td>
-                  <td className="to-td tabular-nums font-bold text-slate-900">₹{x.total.toLocaleString()}</td>
-                  <td className="to-td">{trip && <StatusBadge status={trip.status} />}</td>
+                <tr key={x.id} className={`transition-colors ${i % 2 === 0 ? "bg-white" : "bg-slate-100"} hover:bg-amber-50`}>
+                  <td className="px-5 py-4 text-sm font-mono text-slate-600">{x.tripId}</td>
+                  <td className="px-5 py-4 text-sm font-semibold text-slate-800">{nameOfVeh(x.vehicleId)}</td>
+                  <td className="px-5 py-4 text-sm tabular-nums text-slate-600">₹{x.toll.toLocaleString()}</td>
+                  <td className="px-5 py-4 text-sm tabular-nums text-slate-600">₹{x.misc.toLocaleString()}</td>
+                  <td className="px-5 py-4 text-sm tabular-nums text-slate-600">₹{x.driverAllowance.toLocaleString()}</td>
+                  <td className="px-5 py-4 text-sm tabular-nums font-bold text-slate-800">₹{x.total.toLocaleString()}</td>
+                  <td className="px-5 py-4">{trip && <StatusBadge status={trip.status} />}</td>
                 </tr>
               );
             })}

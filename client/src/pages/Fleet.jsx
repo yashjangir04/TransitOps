@@ -113,47 +113,51 @@ export default function Fleet() {
       {/* table */}
       <div className="to-card overflow-x-auto">
         <table className="w-full min-w-[900px]">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="to-th">Reg no.</th>
-              <th className="to-th">Name / model</th>
-              <th className="to-th">Type</th>
-              <th className="to-th">Capacity</th>
-              <th className="to-th">Odometer</th>
-              <th className="to-th">Acq. cost</th>
-              <th className="to-th">Status</th>
-              <th className="to-th text-right">Actions</th>
+          <thead>
+            <tr className="bg-slate-200">
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Reg no.</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Name / model</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Type</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Capacity</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Odometer</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Acq. cost</th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Status</th>
+              <th className="px-5 py-3.5 text-right text-[11px] font-bold text-slate-500 uppercase tracking-widest">Actions</th>
             </tr>
           </thead>
           <tbody data-testid="fleet-table">
-            {rows.map((v) => (
-              <tr key={v.id} className="hover:bg-gray-50 transition">
-                <td className="to-td font-mono">{v.regNo}</td>
-                <td className="to-td font-semibold text-slate-900">{v.name}</td>
-                <td className="to-td">{v.type}</td>
-                <td className="to-td">{v.capacity} kg</td>
-                <td className="to-td tabular-nums">{v.odometer.toLocaleString()}</td>
-                <td className="to-td tabular-nums">₹{v.acquisitionCost.toLocaleString()}</td>
-                <td className="to-td"><StatusBadge status={v.status} /></td>
-                <td className="to-td text-right">
-                  {v.status !== "Retired" && (
+            {rows.map((v, i) => (
+              <tr key={v.id} className={`transition-colors ${i % 2 === 0 ? "bg-white" : "bg-slate-100"} hover:bg-amber-50`}>
+                <td className="px-5 py-4 text-sm font-mono text-slate-600">{v.regNo}</td>
+                <td className="px-5 py-4 text-sm font-semibold text-slate-800">{v.name}</td>
+                <td className="px-5 py-4 text-sm">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-600">{v.type}</span>
+                </td>
+                <td className="px-5 py-4 text-sm text-slate-600">{v.capacity} kg</td>
+                <td className="px-5 py-4 text-sm tabular-nums text-slate-600">{v.odometer.toLocaleString()}</td>
+                <td className="px-5 py-4 text-sm tabular-nums text-slate-600">₹{v.acquisitionCost.toLocaleString()}</td>
+                <td className="px-5 py-4"><StatusBadge status={v.status} /></td>
+                <td className="px-5 py-4 text-right">
+                  <div className="inline-flex items-center gap-1 divide-x divide-gray-200 border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                    {v.status !== "Retired" && (
+                      <button
+                        onClick={() => updateVehicle(v.id, { status: "Retired" })}
+                        className="px-3 py-1.5 text-xs font-semibold text-orange-600 hover:bg-orange-50 transition"
+                        data-testid={`fleet-retire-${v.id}`}
+                      >Retire</button>
+                    )}
                     <button
-                      onClick={() => updateVehicle(v.id, { status: "Retired" })}
-                      className="text-xs font-semibold text-orange-600 hover:underline mr-3"
-                      data-testid={`fleet-retire-${v.id}`}
-                    >Retire</button>
-                  )}
-                  <button
-                    disabled={busy(v.id)}
-                    onClick={() => deleteVehicle(v.id)}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 hover:underline disabled:text-gray-400 disabled:no-underline"
-                    data-testid={`fleet-delete-${v.id}`}
-                  ><Trash2 size={12} /> Delete</button>
+                      disabled={busy(v.id)}
+                      onClick={() => deleteVehicle(v.id)}
+                      className="px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition flex items-center gap-1 disabled:text-gray-400 disabled:cursor-not-allowed"
+                      data-testid={`fleet-delete-${v.id}`}
+                    ><Trash2 size={11} /> Delete</button>
+                  </div>
                 </td>
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr><td className="to-td text-center text-gray-500 py-10" colSpan={8}>No vehicles match your filters.</td></tr>
+              <tr><td className="px-5 py-12 text-center text-gray-400 text-sm" colSpan={8}>No vehicles match your filters.</td></tr>
             )}
           </tbody>
         </table>

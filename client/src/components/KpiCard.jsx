@@ -26,10 +26,10 @@ export default function KpiCard({ label, value, hint, accent = "amber", icon: Ic
       <div className={`absolute top-0 left-0 h-1 w-full bg-gradient-to-r ${bar}`} />
       <div className="flex items-start justify-between">
         <div>
-          <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+          <div className="h-8 flex items-start text-[11px] font-semibold text-gray-500 uppercase tracking-wider leading-tight">
             {label}
           </div>
-          <div className="mt-2 text-3xl font-extrabold text-slate-900 tabular-nums font-mono">
+          <div className="text-3xl font-extrabold text-slate-900 tabular-nums font-mono">
             {value}
           </div>
           {hint && <div className="mt-1 text-[11px] text-gray-500">{hint}</div>}
