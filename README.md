@@ -19,7 +19,15 @@ tool such as Postman or curl). Keep this in mind when running the project.
 
 ---
 
-## 1. Prerequisites
+## 1. Tech Stack
+
+- **Frontend:** React 19 (Create React App + Craco), Tailwind CSS, Radix UI / shadcn-style components, React Router, React Query/SWR, Recharts for charts.
+- **Backend:** Node.js with Express 5, Prisma ORM, JWT-based authentication (jsonwebtoken + bcrypt).
+- **Database & Tooling:** PostgreSQL (run via Docker Compose), with Adminer for database inspection.
+
+---
+
+## 2. Prerequisites
 
 Make sure the following are installed on your machine before you start:
 
@@ -30,7 +38,7 @@ Make sure the following are installed on your machine before you start:
 
 ---
 
-## 2. Project Structure
+## 3. Project Structure
 
 ```
 TransitOps-main/
@@ -41,7 +49,7 @@ TransitOps-main/
 
 ---
 
-## 3. Setting Up the Database
+## 4. Setting Up the Database
 
 The backend expects a PostgreSQL database. A ready-to-use Docker Compose file
 is provided in the `db/` folder.
@@ -74,7 +82,7 @@ either stop that service first or edit the port mapping in
 
 ---
 
-## 4. Setting Up the Backend (server)
+## 5. Setting Up the Backend (server)
 
 1. Move into the server folder:
 
@@ -161,7 +169,7 @@ These can be tested with a tool such as Postman, Insomnia, or curl.
 
 ---
 
-## 5. Setting Up the Frontend (client)
+## 6. Setting Up the Frontend (client)
 
 1. Open a new terminal and move into the client folder:
 
@@ -216,7 +224,7 @@ These can be tested with a tool such as Postman, Insomnia, or curl.
 
 ---
 
-## 6. Running the Full Project
+## 7. Running the Full Project
 
 To run everything together during development:
 
@@ -227,7 +235,7 @@ To run everything together during development:
 
 ---
 
-## 7. Useful Commands Reference
+## 8. Useful Commands Reference
 
 | Task                          | Command (run inside `server/`)      |
 |-------------------------------|--------------------------------------|
@@ -251,7 +259,7 @@ To run everything together during development:
 
 ---
 
-## 8. Troubleshooting
+## 9. Troubleshooting
 
 - **Port already in use**: Change the `PORT` value in the backend `.env` file,
   or set `PORT` when starting the frontend, or adjust port mappings in
