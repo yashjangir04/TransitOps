@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useApp } from "@/context/AppContext";
 import KpiCard from "@/components/KpiCard";
 import StatusBadge from "@/components/StatusBadge";
-import { Truck, CheckCircle2, Wrench, Route, Clock, Users, Gauge } from "lucide-react";
+import { Truck, CheckCircle2, Wrench, Route, Clock, Users, Gauge, Printer } from "lucide-react";
 
 export default function Dashboard() {
   const { vehicles, drivers, trips } = useApp();
@@ -21,15 +21,25 @@ export default function Dashboard() {
   );
 
   const kpis = useMemo(() => {
-    const total = vehicles.length;
-    const available = vehicles.filter((v) => v.status === "Available").length;
-    const inShop = vehicles.filter((v) => v.status === "In Shop").length;
-    const active = trips.filter((t) => t.status === "On Trip" || t.status === "Dispatched").length;
-    const pending = trips.filter((t) => t.status === "Draft").length;
+    const activeVehicles = filtered.filter((v) => v.status !== "Retired");
+    const total = activeVehicles.length;
+    const available = activeVehicles.filter((v) => v.status === "Available").length;
+    const inShop = activeVehicles.filter((v) => v.status === "In Shop").length;
+    
+    // For trips and drivers, we can filter them based on the filtered vehicles if we want,
+    // but the filters in the UI specifically say "Vehicle Type" and "Status" (which applies to vehicles).
+    // Let's filter active trips that use the filtered vehicles:
+    const filteredTrips = trips.filter((t) => filtered.some(v => v.id === t.vehicleId));
+    
+    const active = filteredTrips.filter((t) => t.status === "On Trip" || t.status === "Dispatched").length;
+    const pending = filteredTrips.filter((t) => t.status === "Draft").length;
+    
+    // Drivers on duty are just drivers, so we leave it global or filter by active trips
     const onDuty = drivers.filter((d) => d.status === "Available" || d.status === "On Trip").length;
+    
     const utilization = total ? Math.round(((total - available) / total) * 100) : 0;
     return { total, available, inShop, active, pending, onDuty, utilization };
-  }, [vehicles, drivers, trips]);
+  }, [filtered, drivers, trips]);
 
   const statusCounts = useMemo(() => {
     const counts = { "On Trip": 0, "In Shop": 0, Retired: 0, Available: 0 };
@@ -37,17 +47,24 @@ export default function Dashboard() {
     return counts;
   }, [filtered]);
 
-  const recentTrips = trips.slice(-4).reverse();
+  const recentTrips = useMemo(() => {
+    return trips.filter((t) => filtered.some(v => v.id === t.vehicleId)).slice(0, 4);
+  }, [trips, filtered]);
   const nameOf = (id, list, key = "name") =>
     list.find((x) => x.id === id)?.[key] || "—";
 
-  return (
-    <div className="space-y-6">
-      {/* Header removed */}
+  const exportPDF = () => {
+    window.print();
+  };
 
+  return (
+    <div className="space-y-6 print:m-0 print:p-0">
       {/* Filters */}
-      <div>
-        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Filters</div>
+      <div className="print:hidden">
+        <div className="flex items-center justify-between mb-2">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Filters</div>
+            <button data-testid="dashboard-export-pdf" onClick={exportPDF} className="to-btn-ghost text-xs py-1"><Printer size={14} /> PDF Report</button>
+        </div>
         <div data-testid="dashboard-filters" className="to-card p-4 flex flex-wrap gap-3">
           <select value={type} onChange={(e) => setType(e.target.value)} className="to-input w-auto min-w-[160px]" data-testid="filter-type">
             <option value="All">Vehicle Type: All</option><option value="Van">Van</option><option value="Truck">Truck</option><option value="Mini">Mini</option>

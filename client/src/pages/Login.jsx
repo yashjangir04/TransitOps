@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { ROLES, DEMO_USERS } from "@/lib/mockData";
+import { ROLES } from "@/lib/mockData";
 import { Navigate } from "react-router-dom";
 import { AlertCircle, ArrowRight } from "lucide-react";
 
@@ -14,20 +14,11 @@ export default function Login() {
 
   if (user) return <Navigate to="/" replace />;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    const res = login(email.trim(), password, role);
+    const res = await login(email.trim(), password, role);
     if (!res.ok) setError(res.error);
-  };
-
-  const fillDemo = (r) => {
-    const u = DEMO_USERS.find((x) => x.role === r);
-    if (u) {
-      setEmail(u.email);
-      setPassword(u.password);
-      setRole(u.role);
-    }
   };
 
   return (
@@ -36,9 +27,7 @@ export default function Login() {
       <aside className="bg-slate-900 text-white flex flex-col p-8 justify-between relative overflow-hidden">
         <div>
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-md bg-slate-800 border border-slate-700 flex items-center justify-center">
-              <div className="w-4 h-4 bg-amber-400 rounded-sm" />
-            </div>
+            <img src="/icon-main.svg" alt="TransitOps" className="w-10 h-10" />
             <div>
               <div className="font-extrabold text-2xl tracking-tight leading-none">TransitOps</div>
               <div className="text-[11px] text-slate-400 mt-1 tracking-wide">
@@ -51,23 +40,17 @@ export default function Login() {
             <div className="text-xs uppercase tracking-widest text-slate-400 mb-3">
               One login, four roles
             </div>
-            <ul className="space-y-2 text-sm">
-              {ROLES.map((r) => (
-                <li key={r.id} className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                  <button
-                    data-testid={`demo-fill-${r.id}`}
-                    onClick={() => fillDemo(r.id)}
-                    className="hover:text-amber-300 transition"
-                  >
-                    {r.label}
-                    <span className="text-slate-500 ml-2 text-[10px]">
-                      (click to auto-fill)
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <p className="text-sm text-slate-300 leading-relaxed mb-4">
+              Please use the credentials provided by your system administrator to log in. Ensure you select the correct role associated with your account.
+            </p>
+            <div className="text-xs text-slate-400 border border-slate-700 rounded-md p-3 bg-slate-800/50">
+              <strong className="text-amber-400 block mb-1">Seeded Accounts:</strong>
+              fleetmanager@gmail.com<br/>
+              dispatcher@gmail.com<br/>
+              safetyofficer@gmail.com<br/>
+              financialanalyst@gmail.com<br/>
+              <span className="text-slate-500 mt-2 block">Default password: password123</span>
+            </div>
           </div>
         </div>
 
@@ -100,7 +83,7 @@ export default function Login() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@transitops"
+                placeholder="you@gmail.com"
                 className="to-input"
               />
             </div>
@@ -174,7 +157,7 @@ export default function Login() {
             <div className="font-semibold text-gray-600 mb-1">Access is scoped by role after login:</div>
             <ul className="space-y-0.5 pl-4 list-disc">
               <li>Fleet Manager → Fleet, Maintenance, Settings</li>
-              <li>Driver → Dashboard, Trips</li>
+              <li>Dispatcher → Dashboard, Trips, Drivers, Fleet</li>
               <li>Safety Officer → Drivers, Compliance</li>
               <li>Financial Analyst → Fuel &amp; Expenses, Analytics</li>
             </ul>

@@ -95,4 +95,16 @@ const getAvailableDrivers = async (request, response) => {
   }
 };
 
-module.exports = { createDriver, getAllDrivers, updateDriverStatus , getAvailableDrivers };
+const deleteDriver = async (request, response) => {
+  try {
+    const { driverId } = request.params;
+    await prismaClient.driver.delete({
+      where: { id: parseInt(driverId) }
+    });
+    response.json({ message: 'Driver deleted successfully' });
+  } catch (error) {
+    response.status(500).json({ error: 'Internal server error while deleting driver' });
+  }
+};
+
+module.exports = { createDriver, getAllDrivers, updateDriverStatus , getAvailableDrivers, deleteDriver };

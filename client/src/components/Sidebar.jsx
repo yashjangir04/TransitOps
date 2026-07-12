@@ -29,24 +29,29 @@ export default function Sidebar() {
   return (
     <aside
       data-testid="sidebar"
-      className="w-60 shrink-0 bg-white border-r border-gray-200 flex flex-col"
+      className="w-full md:w-60 shrink-0 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col md:flex-col print:hidden"
     >
-      <div className="px-5 py-5 border-b border-gray-100">
+      <div className="px-5 py-3 md:py-5 border-b border-gray-100 flex items-center justify-between md:justify-start">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-md bg-slate-900 flex items-center justify-center">
-            <div className="w-3 h-3 bg-amber-400 rounded-sm" />
-          </div>
+          <img src="/icon-main.svg" alt="TransitOps" className="w-8 h-8" />
           <div>
             <div className="font-extrabold text-slate-900 tracking-tight text-lg leading-none">
               TransitOps
             </div>
-            <div className="text-[10px] text-gray-500 mt-0.5 tracking-wide">
+            <div className="text-[10px] text-gray-500 mt-0.5 tracking-wide hidden md:block">
               Smart Transport Ops
             </div>
           </div>
         </div>
+        <button
+          data-testid="sidebar-logout"
+          onClick={logout}
+          className="md:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-gray-600 hover:bg-gray-100 border border-gray-100"
+        >
+          <LogOut size={14} /> Sign out
+        </button>
       </div>
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
+      <nav className="flex-1 px-3 py-2 md:py-4 flex flex-row md:flex-col space-x-2 md:space-x-0 md:space-y-0.5 overflow-x-auto">
         {items.map(({ to, label, icon: Icon, key }) => {
           const allowed = can(key);
           return (
@@ -57,7 +62,7 @@ export default function Sidebar() {
               end={to === "/"}
               className={({ isActive }) =>
                 [
-                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition",
+                  "flex items-center gap-2 md:gap-3 px-3 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap",
                   isActive
                     ? "bg-amber-50 text-amber-800 border border-amber-100"
                     : allowed
@@ -70,24 +75,19 @@ export default function Sidebar() {
               }}
             >
               <Icon size={16} />
-              <span>{label}</span>
-              {!allowed && (
-                <span className="ml-auto text-[9px] uppercase tracking-wider text-gray-400">
-                  locked
-                </span>
-              )}
+              <span className="hidden md:inline">{label}</span>
             </NavLink>
           );
         })}
       </nav>
       <button
-        data-testid="sidebar-logout"
+        data-testid="sidebar-logout-desktop"
         onClick={logout}
-        className="mx-3 mb-4 flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 border border-gray-100"
+        className="hidden md:flex mx-3 mb-4 items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 border border-gray-100"
       >
         <LogOut size={15} /> Sign out
       </button>
-      <div className="px-4 py-3 border-t border-gray-100 text-[10px] text-gray-400">
+      <div className="hidden md:block px-4 py-3 border-t border-gray-100 text-[10px] text-gray-400">
         TransitOps © 2026 — Fleet OS
       </div>
     </aside>

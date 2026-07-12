@@ -23,7 +23,7 @@ export default function Drivers() {
 
   const rows = useMemo(
     () =>
-      drivers.filter(
+      drivers.slice().reverse().filter(
         (d) =>
           (status === "All" || d.status === status) &&
           (q === "" ||
@@ -33,9 +33,10 @@ export default function Drivers() {
     [drivers, q, status],
   );
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    addDriver({ ...form, tripsCompleted: Number(form.tripsCompleted), safetyScore: Number(form.safetyScore) });
+    const res = await addDriver({ ...form, tripsCompleted: Number(form.tripsCompleted), safetyScore: Number(form.safetyScore) });
+    if (!res.ok) return alert(res.error);
     setForm(empty);
     setShowForm(false);
   };

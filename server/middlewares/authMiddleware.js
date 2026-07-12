@@ -1,7 +1,11 @@
 const jsonwebtoken = require('jsonwebtoken');
 
 const verifyToken = (request, response, next) => {
-  const token = request.headers.token;
+  let token = request.headers.token;
+  
+  if (!token && request.headers.authorization && request.headers.authorization.startsWith('Bearer ')) {
+    token = request.headers.authorization.split(' ')[1];
+  }
   
   if (!token) {
     return response.status(401).json({ error: 'No authorization token provided' });

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { useApp } from "@/context/AppContext";
 import KpiCard from "@/components/KpiCard";
-import { Fuel, Gauge, DollarSign, TrendingUp, Download } from "lucide-react";
+import { Fuel, Gauge, DollarSign, TrendingUp, Download, Printer } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
 
 export default function Analytics() {
@@ -14,20 +14,39 @@ export default function Analytics() {
     const totalOps = fuel.reduce((s, f) => s + f.cost, 0) + expenses.reduce((s, e) => s + e.total, 0) + maintenance.reduce((s, m) => s + m.cost, 0);
     const busy = vehicles.filter((v) => v.status === "On Trip" || v.status === "In Shop").length;
     const util = vehicles.length ? Math.round((busy / vehicles.length) * 100) : 0;
-    const revenue = trips.filter((t) => t.status === "Completed").length * 45000; // mock revenue
+    
+    // Use ACTUAL revenue from database trips instead of mock multiplier
+    const revenue = trips.reduce((s, t) => s + (t.revenue || 0), 0);
+    
     const acquisitionTotal = vehicles.reduce((s, v) => s + v.acquisitionCost, 0) || 1;
     const roi = ((revenue - totalOps) / acquisitionTotal) * 100;
     return { eff, util, totalOps, roi: roi.toFixed(1), revenue };
   }, [vehicles, trips, fuel, expenses, maintenance]);
 
-  const monthly = [
-    { m: "Aug", rev: 380000 },
-    { m: "Sep", rev: 420000 },
-    { m: "Oct", rev: 460000 },
-    { m: "Nov", rev: 510000 },
-    { m: "Dec", rev: 620000 },
-    { m: "Jan", rev: 690000 },
-  ];
+  const monthly = useMemo(() => {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const currentMonth = new Date().getMonth();
+    const data = [];
+    
+    // Initialize the last 6 months
+    for (let i = 5; i >= 0; i--) {
+      let m = currentMonth - i;
+      if (m < 0) m += 12;
+      data.push({ m: months[m], rev: 0, index: m });
+    }
+
+    // Since we don't have createdAt in the frontend Trip context yet, we'll just aggregate all revenue into the current month 
+    // for this demonstration, or if we added it, we'd parse it here.
+    // For now, let's just put all completed trip revenues into the current month so the chart works without mock data.
+    trips.forEach(t => {
+        if (t.status === "Completed" && t.revenue > 0) {
+            // Assume it was completed this month since we don't have a completion date in the state
+            data[5].rev += t.revenue; 
+        }
+    });
+
+    return data;
+  }, [trips]);
 
   const costliest = useMemo(() => {
     const map = {};
@@ -35,31 +54,51 @@ export default function Analytics() {
     maintenance.forEach((m) => (map[m.vehicleId] = (map[m.vehicleId] || 0) + m.cost));
     expenses.forEach((e) => (map[e.vehicleId] = (map[e.vehicleId] || 0) + e.total));
     return Object.entries(map)
-      .map(([id, cost]) => ({ vehicle: vehicles.find((v) => v.id === id)?.name || id, cost }))
+      .map(([id, cost]) => ({ vehicle: vehicles.find((v) => v.id == id)?.name || id, cost }))
       .sort((a, b) => b.cost - a.cost)
       .slice(0, 4);
   }, [fuel, maintenance, expenses, vehicles]);
 
   const exportCSV = () => {
     const rows = [
+      ["--- VEHICLE LOGS ---"],
       ["Vehicle", "Reg no", "Type", "Capacity", "Odometer", "Cost", "Status"],
       ...vehicles.map((v) => [v.name, v.regNo, v.type, v.capacity, v.odometer, v.acquisitionCost, v.status]),
+      [],
+      ["--- TRIP LOGS ---"],
+      ["Trip ID", "Source", "Destination", "Cargo (kg)", "Distance (km)", "Revenue", "Status"],
+      ...trips.map((t) => [t.id, t.source, t.destination, t.cargoWeightKg, t.plannedDistance, t.revenue || 0, t.status]),
+      [],
+      ["--- FUEL LOGS ---"],
+      ["Date", "Vehicle", "Liters", "Cost"],
+      ...fuel.map((f) => [new Date(f.createdAt).toLocaleDateString(), vehicles.find(v => v.id === f.vehicleId)?.name || f.vehicleId, f.liters, f.cost]),
+      [],
+      ["--- MAINTENANCE LOGS ---"],
+      ["Date", "Vehicle", "Service", "Cost", "Status"],
+      ...maintenance.map((m) => [new Date(m.createdAt).toLocaleDateString(), vehicles.find(v => v.id === m.vehicleId)?.name || m.vehicleId, m.service, m.cost, m.status])
     ];
     const csv = rows.map((r) => r.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "transitops-vehicles.csv";
+    link.download = "transitops-complete-logs.csv";
     link.click();
   };
 
+  const exportPDF = () => {
+    window.print();
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+    <div className="space-y-6 print:m-0 print:p-0">
+      <div className="flex items-center justify-between flex-wrap gap-3 print:hidden">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Reports &amp; Analytics</h1>
         </div>
-        <button data-testid="analytics-export" onClick={exportCSV} className="to-btn-ghost"><Download size={14} /> Export CSV</button>
+        <div className="flex items-center gap-2">
+          <button data-testid="analytics-export-pdf" onClick={exportPDF} className="to-btn-ghost"><Printer size={14} /> PDF Report</button>
+          <button data-testid="analytics-export" onClick={exportCSV} className="to-btn-ghost"><Download size={14} /> Export CSV</button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -71,7 +110,7 @@ export default function Analytics() {
 
       <div className="grid grid-cols-1 xl:grid-cols-[1.6fr_1fr] gap-6">
         <div className="to-card p-5">
-          <div className="text-sm font-bold text-slate-900 mb-4">Monthly revenue</div>
+          <div className="text-sm font-bold text-slate-900 mb-4">Revenue (Last 6 Months)</div>
           <div style={{ width: "100%", height: 240 }}>
             <ResponsiveContainer>
               <BarChart data={monthly} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>

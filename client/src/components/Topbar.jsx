@@ -1,5 +1,5 @@
-import React from "react";
-import { Search, Bell } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Search, Bell, Moon, Sun } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { ROLES } from "@/lib/mockData";
 
@@ -7,10 +7,25 @@ export default function Topbar() {
   const { user } = useApp();
   const roleLabel = ROLES.find((r) => r.id === user?.role)?.label || user?.role;
   const initial = user?.name?.charAt(0)?.toUpperCase() || "U";
+
+  const [isDark, setIsDark] = useState(() => {
+    return localStorage.getItem("theme") === "dark" || document.documentElement.classList.contains("dark");
+  });
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDark]);
+
   return (
     <header
       data-testid="topbar"
-      className="h-16 bg-white border-b border-gray-200 flex items-center px-6 gap-4"
+      className="h-16 bg-white border-b border-gray-200 flex items-center px-6 gap-4 print:hidden"
     >
       <div className="relative flex-1 max-w-xl">
         <Search
@@ -24,6 +39,13 @@ export default function Topbar() {
         />
       </div>
       <div className="ml-auto flex items-center gap-3">
+        <button 
+          onClick={() => setIsDark(!isDark)}
+          className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 relative"
+          title="Toggle Theme"
+        >
+          {isDark ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
         <button className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 relative">
           <Bell size={16} />
           <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-amber-500" />

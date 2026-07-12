@@ -9,6 +9,15 @@ export default function KpiCard({ label, value, hint, accent = "amber", icon: Ic
     rose: "from-rose-400 to-rose-600",
     slate: "from-slate-600 to-slate-900",
   }[accent];
+  const iconTheme = {
+    amber: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400",
+    emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400",
+    sky: "bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400",
+    indigo: "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400",
+    rose: "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400",
+    slate: "bg-slate-50 text-slate-600 dark:bg-slate-500/10 dark:text-slate-400",
+  }[accent];
+
   return (
     <div
       data-testid={testid}
@@ -26,8 +35,8 @@ export default function KpiCard({ label, value, hint, accent = "amber", icon: Ic
           {hint && <div className="mt-1 text-[11px] text-gray-500">{hint}</div>}
         </div>
         {Icon && (
-          <div className="w-9 h-9 rounded-lg bg-slate-900 text-amber-400 flex items-center justify-center">
-            <Icon size={16} />
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${iconTheme}`}>
+            <Icon size={18} />
           </div>
         )}
       </div>

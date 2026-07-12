@@ -14,13 +14,13 @@ export default function Trips() {
   const availableVehicles = vehicles.filter((v) => v.status === "Available");
   const availableDrivers = drivers.filter((d) => d.status === "Available" && new Date(d.expiry) >= new Date());
 
-  const veh = vehicles.find((v) => v.id === form.vehicleId);
+  const veh = vehicles.find((v) => v.id == form.vehicleId);
   const capacityWarn = veh && Number(form.cargoWeight) > veh.capacity;
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     setError("");
-    const res = createTrip({ ...form, cargoWeight: Number(form.cargoWeight), plannedDistance: Number(form.plannedDistance) });
+    const res = await createTrip({ ...form, cargoWeight: Number(form.cargoWeight), plannedDistance: Number(form.plannedDistance), revenue: Number(form.revenue || 0) });
     if (!res.ok) return setError(res.error);
     setFlash(`Trip ${res.id} created in Draft. Dispatch when ready.`);
     setForm(emptyTrip);
@@ -84,6 +84,7 @@ export default function Trips() {
             </div>
             <div><label className="to-label">Cargo weight (kg)</label><input required type="number" className="to-input" data-testid="trip-cargo" value={form.cargoWeight} onChange={(e) => setForm({ ...form, cargoWeight: e.target.value })} /></div>
             <div><label className="to-label">Planned distance (km)</label><input required type="number" className="to-input" data-testid="trip-distance" value={form.plannedDistance} onChange={(e) => setForm({ ...form, plannedDistance: e.target.value })} /></div>
+            <div className="col-span-2"><label className="to-label">Expected Revenue (₹)</label><input required type="number" className="to-input" data-testid="trip-revenue" value={form.revenue || ""} onChange={(e) => setForm({ ...form, revenue: e.target.value })} placeholder="e.g. 15000" /></div>
           </div>
 
           {capacityWarn && (
@@ -115,7 +116,7 @@ export default function Trips() {
         <div data-testid="trip-live-board" className="to-card p-5">
           <div className="text-sm font-bold text-slate-900 mb-3">Live board</div>
           <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1">
-            {trips.slice().reverse().map((t) => (
+            {trips.map((t) => (
               <div key={t.id} className="border border-gray-100 rounded-lg p-3 hover:bg-gray-50 transition">
                 <div className="flex items-center justify-between mb-2">
                   <div className="font-mono text-sm font-bold text-slate-900">{t.id}</div>
@@ -134,7 +135,12 @@ export default function Trips() {
                     <button onClick={() => dispatchTrip(t.id)} data-testid={`dispatch-${t.id}`} className="text-xs font-bold inline-flex items-center gap-1 text-indigo-700 hover:underline"><Send size={12} /> Dispatch</button>
                   )}
                   {(t.status === "On Trip" || t.status === "Dispatched") && (
-                    <button onClick={() => completeTrip(t.id)} data-testid={`complete-${t.id}`} className="text-xs font-bold inline-flex items-center gap-1 text-emerald-700 hover:underline"><CheckCircle2 size={12} /> Complete</button>
+                    <button onClick={() => {
+                      const input = window.prompt("Enter final odometer reading (leave blank to calculate from planned distance):");
+                      if (input === null) return; // User cancelled
+                      const payload = input.trim() ? { finalOdometer: Number(input) } : {};
+                      completeTrip(t.id, payload);
+                    }} data-testid={`complete-${t.id}`} className="text-xs font-bold inline-flex items-center gap-1 text-emerald-700 hover:underline"><CheckCircle2 size={12} /> Complete</button>
                   )}
                   {t.status !== "Completed" && t.status !== "Cancelled" && (
                     <button onClick={() => cancelTrip(t.id)} data-testid={`cancel-${t.id}`} className="text-xs font-bold inline-flex items-center gap-1 text-rose-600 hover:underline ml-auto"><X size={12} /> Cancel</button>

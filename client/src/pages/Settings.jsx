@@ -37,7 +37,6 @@ export default function Settings() {
           </div>
           <div className="flex items-center gap-3 pt-2">
             <button data-testid="settings-save" onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 1500); }} className="to-btn-primary"><Save size={14} /> Save changes</button>
-            <button data-testid="settings-reset-demo" onClick={() => { if (window.confirm("Reset all demo data?")) resetDemo(); }} className="to-btn-ghost"><RotateCcw size={14} /> Reset demo data</button>
             {saved && <span className="text-xs text-emerald-600 font-semibold">Saved.</span>}
           </div>
         </div>

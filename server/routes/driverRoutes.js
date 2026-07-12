@@ -4,7 +4,8 @@ const {
   createDriver, 
   getAllDrivers, 
   updateDriverStatus,
-  getAvailableDrivers 
+  getAvailableDrivers,
+  deleteDriver
 } = require('../controllers/driverController');
 
 const router = express.Router();
@@ -39,6 +40,12 @@ router.patch(
 //   verifyToken, 
 //   checkRole(['FLEET_MANAGER', 'SAFETY_OFFICER']), 
   updateDriverStatus
+);
+
+// Route-> DELETE /api/drivers/:driverId (Used to delete drivers)
+router.delete(
+  '/:driverId',
+  deleteDriver
 );
 
 module.exports = router;

@@ -50,6 +50,8 @@ enum MaintenanceStatus {
 enum ExpenseType {
   TOLL
   MISC
+  ALLOWANCE
+  TOTAL
 }
 
 enum Category {

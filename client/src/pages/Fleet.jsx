@@ -24,7 +24,7 @@ export default function Fleet() {
 
   const rows = useMemo(
     () =>
-      vehicles.filter(
+      vehicles.slice().reverse().filter(
         (v) =>
           (type === "Type: All" || v.type === type.replace("Type: ", "")) &&
           (status === "Status: All" || v.status === status.replace("Status: ", "")) &&
@@ -35,10 +35,10 @@ export default function Fleet() {
     [vehicles, q, type, status],
   );
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     setError("");
-    const res = addVehicle({
+    const res = await addVehicle({
       ...form,
       capacity: Number(form.capacity),
       odometer: Number(form.odometer),

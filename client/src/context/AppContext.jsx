@@ -1,20 +1,13 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { DEMO_USERS, initialData, RBAC } from "@/lib/mockData";
+import axios from "axios";
+import { RBAC } from "@/lib/mockData";
 
 const AppContext = createContext(null);
-
-const STORAGE_KEY = "transitops:data:v1";
 const AUTH_KEY = "transitops:auth:v1";
 
-const load = () => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return initialData;
-    return JSON.parse(raw);
-  } catch {
-    return initialData;
-  }
-};
+const api = axios.create({
+  baseURL: "http://localhost:3001/api",
+});
 
 const loadAuth = () => {
   try {
@@ -25,138 +18,314 @@ const loadAuth = () => {
   }
 };
 
+const toTitleCase = (str) => {
+  if (!str) return '';
+  return str.toLowerCase().split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+};
+
+const toSnakeCase = (str) => {
+  if (!str) return '';
+  return str.toUpperCase().replace(' ', '_');
+};
+
 export function AppProvider({ children }) {
-  const [data, setData] = useState(load);
+  const [data, setData] = useState({ vehicles: [], drivers: [], trips: [], maintenance: [], fuel: [], expenses: [] });
   const [user, setUser] = useState(loadAuth);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }, [data]);
-  useEffect(() => {
-    if (user) localStorage.setItem(AUTH_KEY, JSON.stringify(user));
-    else localStorage.removeItem(AUTH_KEY);
+    if (user) {
+      localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+      api.defaults.headers.common['Authorization'] = `Bearer ${user.token}`;
+    } else {
+      localStorage.removeItem(AUTH_KEY);
+      delete api.defaults.headers.common['Authorization'];
+      setData({ vehicles: [], drivers: [], trips: [], maintenance: [], fuel: [], expenses: [] });
+    }
   }, [user]);
 
-  const login = (email, password, role) => {
-    const found = DEMO_USERS.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password && u.role === role,
-    );
-    if (!found) return { ok: false, error: "Invalid credentials or wrong role selected." };
-    const token = "mock-jwt-" + btoa(found.email + ":" + Date.now());
-    const session = { email: found.email, name: found.name, role: found.role, token };
-    setUser(session);
-    return { ok: true };
-  };
-  const logout = () => setUser(null);
+  const fetchAll = async () => {
+    try {
+      const [veh, drv, trp, maint, fuel, exp] = await Promise.all([
+        api.get('/vehicles').catch(() => ({ data: { data: [] } })),
+        api.get('/drivers').catch(() => ({ data: { data: [] } })),
+        api.get('/trips').catch(() => ({ data: { data: [] } })),
+        api.get('/maintenance').catch(() => ({ data: { data: [] } })),
+        api.get('/finance/fuel').catch(() => ({ data: { data: [] } })),
+        api.get('/finance/expenses').catch(() => ({ data: { data: [] } })),
+      ]);
 
+      const groupedExpenses = {};
+      (exp.data.data || []).forEach(e => {
+        if (!groupedExpenses[e.tripId]) {
+          groupedExpenses[e.tripId] = { id: e.tripId, tripId: e.tripId, vehicleId: e.vehicleId, toll: 0, misc: 0, driverAllowance: 0, total: 0 };
+        }
+        if (e.type === 'TOLL') groupedExpenses[e.tripId].toll += e.amount;
+        else if (e.type === 'MISC') groupedExpenses[e.tripId].misc += e.amount;
+        else if (e.type === 'ALLOWANCE') groupedExpenses[e.tripId].driverAllowance += e.amount;
+        groupedExpenses[e.tripId].total += e.amount;
+      });
+
+      setData({
+        vehicles: (veh.data.data || []).map(v => ({
+          id: v.id,
+          regNo: v.registrationNumber,
+          name: v.model,
+          type: v.type,
+          capacity: v.maxCapacityKg,
+          odometer: v.odometer,
+          acquisitionCost: v.acquisitionCost,
+          status: toTitleCase(v.status)
+        })),
+        drivers: (drv.data.data || []).map(d => ({
+          id: d.id,
+          name: d.name,
+          licenseNo: d.licenseNumber,
+          category: d.licenseCategory,
+          expiry: d.licenseExpiryDate ? d.licenseExpiryDate.split('T')[0] : '',
+          contact: d.contactNumber,
+          safetyScore: d.safetyScore,
+          status: toTitleCase(d.status),
+          tripsCompleted: parseInt(d.tripCompletionRate) || 0
+        })),
+        trips: (trp.data.data || []).map(t => ({
+          id: t.id,
+          tripNumber: t.tripNumber,
+          source: t.source,
+          destination: t.destination,
+          vehicleId: t.vehicleId,
+          driverId: t.driverId,
+          cargoWeight: t.cargoWeightKg,
+          plannedDistance: t.plannedDistance,
+          status: toTitleCase(t.status),
+          revenue: t.revenue,
+        })),
+        maintenance: (maint.data.data || []).map(m => ({
+          id: m.id,
+          vehicleId: m.vehicleId,
+          service: m.serviceType,
+          cost: m.cost,
+          date: m.logDate ? m.logDate.split('T')[0] : '',
+          status: m.status === 'ACTIVE' ? 'In Shop' : 'Completed'
+        })),
+        fuel: (fuel.data.data || []).map(f => ({
+          id: f.id,
+          vehicleId: f.vehicleId,
+          date: f.logDate ? f.logDate.split('T')[0] : '',
+          liters: f.liters,
+          cost: f.cost
+        })),
+        expenses: Object.values(groupedExpenses)
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchAll();
+    }
+  }, [user]);
+
+  const login = async (email, password, role) => {
+    try {
+      const res = await api.post('/auth/login', {
+        email,
+        password,
+        role: role.toUpperCase()
+      });
+      const token = res.data.token;
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      
+      const session = { 
+        email: email, 
+        name: payload.userName?.name || email.split('@')[0], 
+        role: role, 
+        token 
+      };
+      setUser(session);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err.response?.data?.error || "Invalid credentials or wrong role selected." };
+    }
+  };
+
+  const logout = () => setUser(null);
   const can = (module) => user && RBAC[module]?.includes(user.role);
 
-  // ---------- CRUD helpers ----------
-  const uid = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
-
-  const addVehicle = (v) => {
-    if (data.vehicles.some((x) => x.regNo === v.regNo)) return { ok: false, error: "Registration number already exists." };
-    setData((d) => ({ ...d, vehicles: [...d.vehicles, { ...v, id: uid("V") }] }));
-    return { ok: true };
+  const addVehicle = async (v) => {
+    try {
+      await api.post('/vehicles', {
+        registrationNumber: v.regNo,
+        model: v.name,
+        type: v.type,
+        maxCapacityKg: v.capacity,
+        odometer: v.odometer,
+        acquisitionCost: v.acquisitionCost,
+        status: toSnakeCase(v.status)
+      });
+      await fetchAll();
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err.response?.data?.error || err.message };
+    }
   };
-  const updateVehicle = (id, patch) =>
-    setData((d) => ({ ...d, vehicles: d.vehicles.map((v) => (v.id === id ? { ...v, ...patch } : v)) }));
-  const deleteVehicle = (id) => setData((d) => ({ ...d, vehicles: d.vehicles.filter((v) => v.id !== id) }));
-
-  const addDriver = (dr) => setData((d) => ({ ...d, drivers: [...d.drivers, { ...dr, id: uid("D") }] }));
-  const updateDriver = (id, patch) =>
-    setData((d) => ({ ...d, drivers: d.drivers.map((v) => (v.id === id ? { ...v, ...patch } : v)) }));
-  const deleteDriver = (id) => setData((d) => ({ ...d, drivers: d.drivers.filter((v) => v.id !== id) }));
-
-  // ---- Trip lifecycle (with business rules) ----
-  const createTrip = (t) => {
-    // Basic validation: cargo weight vs capacity
-    const veh = data.vehicles.find((v) => v.id === t.vehicleId);
-    if (!veh) return { ok: false, error: "Vehicle not found." };
-    if (["In Shop", "Retired", "On Trip"].includes(veh.status)) return { ok: false, error: `Vehicle is ${veh.status}.` };
-    if (t.cargoWeight > veh.capacity)
-      return { ok: false, error: `Cargo weight ${t.cargoWeight} kg exceeds vehicle capacity ${veh.capacity} kg.` };
-    const dr = data.drivers.find((x) => x.id === t.driverId);
-    if (!dr) return { ok: false, error: "Driver not found." };
-    if (dr.status === "Suspended") return { ok: false, error: "Driver is suspended." };
-    if (dr.status === "On Trip") return { ok: false, error: "Driver is already on a trip." };
-    const expired = new Date(dr.expiry) < new Date();
-    if (expired) return { ok: false, error: "Driver license expired." };
-    const newTrip = { ...t, id: uid("TR"), status: "Draft" };
-    setData((d) => ({ ...d, trips: [...d.trips, newTrip] }));
-    return { ok: true, id: newTrip.id };
+  
+  const updateVehicle = async (id, patch) => {
+    if (patch.status) {
+      try {
+        await api.patch(`/vehicles/${id}/status`, { status: patch.status });
+        await fetchAll();
+      } catch (err) {
+        console.error(err);
+      }
+    }
   };
-
-  const dispatchTrip = (id) => {
-    setData((d) => {
-      const trip = d.trips.find((t) => t.id === id);
-      if (!trip) return d;
-      return {
-        ...d,
-        trips: d.trips.map((t) => (t.id === id ? { ...t, status: "On Trip" } : t)),
-        vehicles: d.vehicles.map((v) => (v.id === trip.vehicleId ? { ...v, status: "On Trip" } : v)),
-        drivers: d.drivers.map((v) => (v.id === trip.driverId ? { ...v, status: "On Trip" } : v)),
-      };
-    });
-  };
-  const completeTrip = (id) => {
-    setData((d) => {
-      const trip = d.trips.find((t) => t.id === id);
-      if (!trip) return d;
-      return {
-        ...d,
-        trips: d.trips.map((t) => (t.id === id ? { ...t, status: "Completed" } : t)),
-        vehicles: d.vehicles.map((v) => (v.id === trip.vehicleId ? { ...v, status: "Available" } : v)),
-        drivers: d.drivers.map((v) => (v.id === trip.driverId ? { ...v, status: "Available" } : v)),
-      };
-    });
-  };
-  const cancelTrip = (id) => {
-    setData((d) => {
-      const trip = d.trips.find((t) => t.id === id);
-      if (!trip) return d;
-      const restore = trip.status === "On Trip" || trip.status === "Dispatched";
-      return {
-        ...d,
-        trips: d.trips.map((t) => (t.id === id ? { ...t, status: "Cancelled" } : t)),
-        vehicles: restore
-          ? d.vehicles.map((v) => (v.id === trip.vehicleId ? { ...v, status: "Available" } : v))
-          : d.vehicles,
-        drivers: restore
-          ? d.drivers.map((v) => (v.id === trip.driverId ? { ...v, status: "Available" } : v))
-          : d.drivers,
-      };
-    });
+  
+  const deleteVehicle = async (id) => {
+    try {
+      await api.delete(`/vehicles/${id}`);
+      await fetchAll();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  // ---- Maintenance ----
-  const addMaintenance = (m) => {
-    setData((d) => ({
-      ...d,
-      maintenance: [...d.maintenance, { ...m, id: uid("M") }],
-      vehicles: m.status === "In Shop" ? d.vehicles.map((v) => (v.id === m.vehicleId ? { ...v, status: "In Shop" } : v)) : d.vehicles,
-    }));
+  const addDriver = async (dr) => {
+    try {
+      await api.post('/drivers/create', {
+        name: dr.name,
+        licenseNumber: dr.licenseNo,
+        licenseCategory: dr.category,
+        licenseExpiryDate: new Date(dr.expiry).toISOString(),
+        contactNumber: dr.contact
+      });
+      await fetchAll();
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err.response?.data?.error || err.message };
+    }
   };
-  const closeMaintenance = (id) => {
-    setData((d) => {
-      const rec = d.maintenance.find((m) => m.id === id);
-      if (!rec) return d;
-      return {
-        ...d,
-        maintenance: d.maintenance.map((m) => (m.id === id ? { ...m, status: "Completed" } : m)),
-        vehicles: d.vehicles.map((v) =>
-          v.id === rec.vehicleId && v.status !== "Retired" ? { ...v, status: "Available" } : v,
-        ),
-      };
-    });
+  
+  const updateDriver = async (id, patch) => {
+    if (patch.status) {
+      try {
+        await api.patch(`/drivers/${id}/status`, { newStatus: toSnakeCase(patch.status) });
+        await fetchAll();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+  
+  const deleteDriver = async (id) => {
+    try {
+      await api.delete(`/drivers/${id}`);
+      await fetchAll();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  // ---- Fuel & Expenses ----
-  const addFuel = (f) => setData((d) => ({ ...d, fuel: [...d.fuel, { ...f, id: uid("F") }] }));
-  const addExpense = (e) => setData((d) => ({ ...d, expenses: [...d.expenses, { ...e, id: uid("E") }] }));
+  const createTrip = async (t) => {
+    try {
+      const res = await api.post('/trips/create', {
+        source: t.source,
+        destination: t.destination,
+        vehicleId: parseInt(t.vehicleId),
+        driverId: parseInt(t.driverId),
+        cargoWeightKg: t.cargoWeight,
+        plannedDistance: t.plannedDistance,
+        revenue: t.revenue
+      });
+      await fetchAll();
+      return { ok: true, id: res.data.data.id };
+    } catch (err) {
+      return { ok: false, error: err.response?.data?.error || err.message };
+    }
+  };
 
-  const resetDemo = () => setData(initialData);
+  const dispatchTrip = async (id) => {
+    try {
+      await api.post(`/trips/${id}/dispatch`);
+      await fetchAll();
+    } catch(err) { 
+      alert(err.response?.data?.error || err.message);
+    }
+  };
+  
+  const completeTrip = async (id, payload = {}) => {
+    try {
+      await api.post(`/trips/${id}/complete`, payload);
+      await fetchAll();
+    } catch(err) { 
+      alert(err.response?.data?.error || err.message);
+    }
+  };
+  
+  const cancelTrip = async (id) => {
+    try {
+      await api.post(`/trips/${id}/cancel`);
+      await fetchAll();
+    } catch(err) { 
+      alert(err.response?.data?.error || err.message);
+    }
+  };
 
+  const addMaintenance = async (m) => {
+    try {
+      await api.post('/maintenance', {
+        vehicleId: parseInt(m.vehicleId),
+        serviceType: m.service,
+        cost: m.cost,
+        logDate: m.date || new Date().toISOString(),
+        status: m.status === "In Shop" ? "ACTIVE" : "CLOSED"
+      });
+      await fetchAll();
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err.response?.data?.error || err.message };
+    }
+  };
+
+  const closeMaintenance = async (id) => {
+    try {
+      await api.put(`/maintenance/${id}`, { status: 'CLOSED' });
+      await fetchAll();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const addFuel = async (f) => {
+    try {
+      await api.post('/finance/fuel/create', {
+        vehicleId: parseInt(f.vehicleId),
+        liters: f.liters,
+        cost: f.cost
+      });
+      await fetchAll();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const addExpense = async (e) => {
+    try {
+      const promises = [];
+      if (e.toll > 0) promises.push(api.post('/finance/expenses/create', { type: 'TOLL', amount: e.toll, vehicleId: parseInt(e.vehicleId), tripId: parseInt(e.tripId) }));
+      if (e.misc > 0) promises.push(api.post('/finance/expenses/create', { type: 'MISC', amount: e.misc, vehicleId: parseInt(e.vehicleId), tripId: parseInt(e.tripId) }));
+      if (e.driverAllowance > 0) promises.push(api.post('/finance/expenses/create', { type: 'ALLOWANCE', amount: e.driverAllowance, vehicleId: parseInt(e.vehicleId), tripId: parseInt(e.tripId) }));
+      await Promise.all(promises);
+      await fetchAll();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const resetDemo = () => {};
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const value = useMemo(
     () => ({
       ...data,
@@ -180,7 +349,7 @@ export function AppProvider({ children }) {
       addExpense,
       resetDemo,
     }),
-    [data, user], // eslint-disable-line react-hooks/exhaustive-deps
+    [data, user],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

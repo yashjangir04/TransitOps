@@ -32,6 +32,39 @@ app.use('/api/maintenance', maintenanceRoutes);
  
 
 const port = process.env.PORT || 3000;
+
+// Bonus Feature: Email Reminders for Expiring Licenses
+const cron = require('node-cron');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+cron.schedule('0 8 * * *', async () => {
+  console.log('Running daily license expiry check...');
+  try {
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+    
+    const expiringDrivers = await prisma.driver.findMany({
+      where: {
+        licenseExpiry: {
+          lte: thirtyDaysFromNow,
+          gte: new Date()
+        }
+      }
+    });
+
+    if (expiringDrivers.length > 0) {
+      console.log(`[ALERT] Found ${expiringDrivers.length} drivers with licenses expiring soon!`);
+      expiringDrivers.forEach(d => {
+        // Mock email sending
+        console.log(`--> Sending email reminder to Admin for driver: ${d.name} (License: ${d.licenseNumber} expires on ${d.licenseExpiry})`);
+      });
+    }
+  } catch (err) {
+    console.error('Failed to run license expiry cron job', err);
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server running on port: ${port}`);
 });

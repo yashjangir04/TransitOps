@@ -7,10 +7,11 @@ export default function Maintenance() {
   const { maintenance, vehicles, addMaintenance, closeMaintenance } = useApp();
   const [form, setForm] = useState({ vehicleId: "", service: "", cost: "", date: "", status: "In Shop" });
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     if (!form.vehicleId) return;
-    addMaintenance({ ...form, cost: Number(form.cost) });
+    const res = await addMaintenance({ ...form, cost: Number(form.cost) });
+    if (!res.ok) return alert(res.error);
     setForm({ vehicleId: "", service: "", cost: "", date: "", status: "In Shop" });
   };
 
@@ -47,11 +48,6 @@ export default function Maintenance() {
           <div className="flex justify-end">
             <button className="to-btn-primary" data-testid="maint-submit"><Save size={14} /> Save record</button>
           </div>
-
-          <div className="pt-3 border-t border-gray-100 text-xs text-gray-500 flex items-center gap-2">
-            <StatusBadge status="Available" /> <ArrowRight size={12} /> <StatusBadge status="In Shop" />
-            <span className="ml-2">→ vehicle auto-flagged when in shop.</span>
-          </div>
         </form>
 
         <div className="to-card overflow-hidden">
@@ -68,7 +64,7 @@ export default function Maintenance() {
               </tr>
             </thead>
             <tbody data-testid="maint-table">
-              {maintenance.map((m) => (
+              {maintenance.slice().reverse().map((m) => (
                 <tr key={m.id} className="hover:bg-gray-50 transition">
                   <td className="to-td font-semibold text-slate-900">{nameOf(m.vehicleId)}</td>
                   <td className="to-td">{m.service}</td>

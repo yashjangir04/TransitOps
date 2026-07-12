@@ -5,10 +5,23 @@ import StatusBadge from "@/components/StatusBadge";
 
 export default function FuelExpenses() {
   const { fuel, expenses, vehicles, trips, addFuel, addExpense } = useApp();
+  const [filterVehicleId, setFilterVehicleId] = useState("");
   const [fForm, setFForm] = useState({ vehicleId: "", date: "", liters: "", cost: "" });
   const [eForm, setEForm] = useState({ tripId: "", vehicleId: "", toll: 0, misc: 0, driverAllowance: 0 });
 
   const nameOfVeh = (id) => vehicles.find((v) => v.id === id)?.name || "—";
+
+  const filteredFuel = useMemo(() => {
+    let list = fuel.slice().reverse();
+    if (filterVehicleId) list = list.filter(f => f.vehicleId == filterVehicleId);
+    return list;
+  }, [fuel, filterVehicleId]);
+
+  const filteredExpenses = useMemo(() => {
+    let list = expenses.slice().reverse();
+    if (filterVehicleId) list = list.filter(e => e.vehicleId == filterVehicleId);
+    return list;
+  }, [expenses, filterVehicleId]);
 
   const totalOps = useMemo(() => {
     const f = fuel.reduce((s, x) => s + Number(x.cost || 0), 0);
@@ -16,15 +29,15 @@ export default function FuelExpenses() {
     return f + e;
   }, [fuel, expenses]);
 
-  const submitFuel = (e) => {
+  const submitFuel = async (e) => {
     e.preventDefault();
-    addFuel({ ...fForm, liters: Number(fForm.liters), cost: Number(fForm.cost) });
+    await addFuel({ ...fForm, liters: Number(fForm.liters), cost: Number(fForm.cost) });
     setFForm({ vehicleId: "", date: "", liters: "", cost: "" });
   };
-  const submitExp = (e) => {
+  const submitExp = async (e) => {
     e.preventDefault();
     const total = Number(eForm.toll || 0) + Number(eForm.misc || 0) + Number(eForm.driverAllowance || 0);
-    addExpense({ ...eForm, toll: Number(eForm.toll), misc: Number(eForm.misc), driverAllowance: Number(eForm.driverAllowance), total });
+    await addExpense({ ...eForm, toll: Number(eForm.toll), misc: Number(eForm.misc), driverAllowance: Number(eForm.driverAllowance), total });
     setEForm({ tripId: "", vehicleId: "", toll: 0, misc: 0, driverAllowance: 0 });
   };
 
@@ -39,6 +52,13 @@ export default function FuelExpenses() {
           <div data-testid="total-ops-cost" className="text-2xl font-extrabold text-slate-900 font-mono tabular-nums">₹{totalOps.toLocaleString()}</div>
           <div className="text-[10px] text-gray-400">= FUEL + EXPENSES + MAINTENANCE</div>
         </div>
+      </div>
+
+      <div className="to-card p-4 flex flex-wrap items-center gap-3">
+        <select value={filterVehicleId} onChange={(e) => setFilterVehicleId(e.target.value)} className="to-input w-auto min-w-[200px]" data-testid="fuel-expense-filter">
+          <option value="">Filter by Vehicle: All</option>
+          {vehicles.map((v) => <option key={v.id} value={v.id}>{v.name} ({v.regNo})</option>)}
+        </select>
       </div>
 
       {/* Fuel logs */}
@@ -63,7 +83,7 @@ export default function FuelExpenses() {
             </tr>
           </thead>
           <tbody data-testid="fuel-table">
-            {fuel.map((f) => (
+            {filteredFuel.map((f) => (
               <tr key={f.id} className="hover:bg-gray-50">
                 <td className="to-td font-semibold text-slate-900">{nameOfVeh(f.vehicleId)}</td>
                 <td className="to-td">{f.date}</td>
@@ -71,7 +91,7 @@ export default function FuelExpenses() {
                 <td className="to-td tabular-nums">₹{f.cost.toLocaleString()}</td>
               </tr>
             ))}
-            {fuel.length === 0 && <tr><td className="to-td text-center text-gray-500 py-10" colSpan={4}>No fuel entries yet.</td></tr>}
+            {filteredFuel.length === 0 && <tr><td className="to-td text-center text-gray-500 py-10" colSpan={4}>No fuel entries yet.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -102,7 +122,7 @@ export default function FuelExpenses() {
             </tr>
           </thead>
           <tbody data-testid="expense-table">
-            {expenses.map((x) => {
+            {filteredExpenses.map((x) => {
               const trip = trips.find((t) => t.id === x.tripId);
               return (
                 <tr key={x.id} className="hover:bg-gray-50">
@@ -116,7 +136,7 @@ export default function FuelExpenses() {
                 </tr>
               );
             })}
-            {expenses.length === 0 && <tr><td className="to-td text-center text-gray-500 py-10" colSpan={7}>No expenses yet.</td></tr>}
+            {filteredExpenses.length === 0 && <tr><td className="to-td text-center text-gray-500 py-10" colSpan={7}>No expenses yet.</td></tr>}
           </tbody>
         </table>
       </div>

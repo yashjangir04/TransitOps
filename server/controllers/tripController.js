@@ -2,10 +2,9 @@ const prismaClient = require('../config/db');
 
 const createTrip = async (request, response) => {
   try {
-    // Updated to match 'source' and 'plannedDistance' from your schema
-    const { source, destination, cargoWeightKg, plannedDistance, vehicleId, driverId } = request.body;
+    const { source, destination, cargoWeightKg, plannedDistance, vehicleId, driverId, revenue } = request.body;
 
-    const generatedTripNumber = `TR-${Math.floor(100000 + Math.random() * 900000)}`;
+    const generatedTripNumber = `TRIP-${Date.now().toString().slice(-6)}`;
 
     const newTripRecord = await prismaClient.trip.create({
       data: {
@@ -14,6 +13,7 @@ const createTrip = async (request, response) => {
         destination: destination,
         cargoWeightKg: cargoWeightKg,
         plannedDistance: plannedDistance,
+        revenue: revenue || 0,
         status: 'DRAFT', 
         vehicleId: vehicleId || null,
         driverId: driverId || null
@@ -132,22 +132,29 @@ const cancelTrip = async (request, response) => {
 
 const completeTrip = async (request, response) => {
   const { tripId } = request.params;
-  const { finalOdometer, fuelLiters, fuelCost, finalRevenue } = request.body;
+  const { finalOdometer, fuelLiters, fuelCost, finalRevenue } = request.body || {};
 
   try {
-    const tripRecord = await prismaClient.trip.findUnique({ where: { id: parseInt(tripId) } });
+    const tripRecord = await prismaClient.trip.findUnique({ where: { id: parseInt(tripId) }, include: { vehicle: true } });
     if (!tripRecord || tripRecord.status !== 'DISPATCHED') return response.status(400).json({ error: 'Only dispatched trips can be completed' });
 
-    const transactionResult = await prismaClient.$transaction([
-      // Added revenue update based on your schema
-      prismaClient.trip.update({ where: { id: tripRecord.id }, data: { status: 'COMPLETED', revenue: finalRevenue || 0 } }),
-      prismaClient.vehicle.update({ where: { id: tripRecord.vehicleId }, data: { status: 'AVAILABLE', odometer: finalOdometer } }),
-      prismaClient.driver.update({ where: { id: tripRecord.driverId }, data: { status: 'AVAILABLE' } }),
-      prismaClient.fuelLog.create({
-        data: { liters: fuelLiters, cost: fuelCost, vehicleId: tripRecord.vehicleId, tripId: tripRecord.id }
-      })
-    ]);
+    const newOdometer = finalOdometer !== undefined ? finalOdometer : (tripRecord.vehicle?.odometer || 0) + (tripRecord.plannedDistance || 0);
 
+    const transactionOperations = [
+      prismaClient.trip.update({ where: { id: tripRecord.id }, data: { status: 'COMPLETED', revenue: finalRevenue !== undefined ? finalRevenue : tripRecord.revenue } }),
+      prismaClient.vehicle.update({ where: { id: tripRecord.vehicleId }, data: { status: 'AVAILABLE', odometer: newOdometer } }),
+      prismaClient.driver.update({ where: { id: tripRecord.driverId }, data: { status: 'AVAILABLE' } })
+    ];
+
+    if (fuelLiters !== undefined && fuelCost !== undefined) {
+      transactionOperations.push(
+        prismaClient.fuelLog.create({
+          data: { liters: fuelLiters, cost: fuelCost, vehicleId: tripRecord.vehicleId, tripId: tripRecord.id }
+        })
+      );
+    }
+
+    const transactionResult = await prismaClient.$transaction(transactionOperations);
     response.json({ message: 'Trip completed and assets released', data: transactionResult[0] });
   } catch (error) {
     console.error(error);
