@@ -40,6 +40,7 @@ exports.getVehicles = async (req, res) => {
  
 exports.createVehicle = async (req, res) => {
     try {
+        console.log(req.body);
         const { 
             registrationNumber, 
             model, 
