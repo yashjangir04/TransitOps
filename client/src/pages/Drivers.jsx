@@ -135,10 +135,8 @@ export default function Drivers() {
           </tbody>
         </table>
       </div>
-
-      <div className="text-xs text-gray-500">
-        Rule: Expired license or Suspended status → blocked from trip assignment.
-      </div>
     </div>
   );
 }
+
+

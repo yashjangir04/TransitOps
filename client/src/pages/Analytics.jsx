@@ -58,7 +58,6 @@ export default function Analytics() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Reports &amp; Analytics</h1>
-          <p className="text-sm text-gray-500">KPI-driven insights across fuel, utilization &amp; ROI.</p>
         </div>
         <button data-testid="analytics-export" onClick={exportCSV} className="to-btn-ghost"><Download size={14} /> Export CSV</button>
       </div>

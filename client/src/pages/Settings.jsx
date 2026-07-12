@@ -20,8 +20,7 @@ export default function Settings() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Settings &amp; RBAC</h1>
-        <p className="text-sm text-gray-500">Company preferences and role-based access matrix.</p>
+        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Role Based Access Control</h1>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -43,37 +42,7 @@ export default function Settings() {
           </div>
         </div>
 
-        <div className="to-card p-5">
-          <div className="text-sm font-bold text-slate-900 mb-3">Role-based access (RBAC)</div>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[500px]">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="to-th">Role</th>
-                  {MODULES.map((m) => <th key={m.key} className="to-th text-center">{m.label}</th>)}
-                </tr>
-              </thead>
-              <tbody data-testid="settings-rbac-table">
-                {ROLES.map((r) => (
-                  <tr key={r.id}>
-                    <td className="to-td font-semibold text-slate-900">{r.label}</td>
-                    {MODULES.map((m) => {
-                      const allowed = RBAC[m.key]?.includes(r.id);
-                      return (
-                        <td key={m.key} className="to-td text-center">
-                          {allowed ? <Check size={16} className="text-emerald-600 inline" /> : <X size={16} className="text-gray-300 inline" />}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="text-[11px] text-gray-500 mt-3">
-            RBAC is enforced on the sidebar (locked entries) and each route guard. Change requires re-login for another role.
-          </div>
-        </div>
+
       </div>
     </div>
   );

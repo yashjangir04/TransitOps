@@ -158,9 +158,6 @@ export default function Fleet() {
           </tbody>
         </table>
       </div>
-      <div className="text-xs text-gray-500">
-        Business rule: Registration number must be unique. Retired &amp; In Shop vehicles are hidden from Trip Dispatcher.
-      </div>
     </div>
   );
 }

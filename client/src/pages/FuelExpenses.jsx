@@ -33,7 +33,6 @@ export default function FuelExpenses() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Fuel &amp; Expense Management</h1>
-          <p className="text-sm text-gray-500">Track fuel logs, tolls, driver allowances &amp; misc expenses.</p>
         </div>
         <div className="to-card px-4 py-2">
           <div className="text-[10px] uppercase tracking-wider text-gray-500">Total operational cost</div>
