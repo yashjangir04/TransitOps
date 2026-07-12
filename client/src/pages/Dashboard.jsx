@@ -1,0 +1,135 @@
+import React, { useMemo, useState } from "react";
+import { useApp } from "@/context/AppContext";
+import KpiCard from "@/components/KpiCard";
+import StatusBadge from "@/components/StatusBadge";
+import { Truck, CheckCircle2, Wrench, Route, Clock, Users, Gauge } from "lucide-react";
+
+export default function Dashboard() {
+  const { vehicles, drivers, trips } = useApp();
+  const [type, setType] = useState("All");
+  const [status, setStatus] = useState("All");
+  const [region, setRegion] = useState("All");
+
+  const filtered = useMemo(
+    () =>
+      vehicles.filter(
+        (v) =>
+          (type === "All" || v.type === type) &&
+          (status === "All" || v.status === status),
+      ),
+    [vehicles, type, status],
+  );
+
+  const kpis = useMemo(() => {
+    const total = vehicles.length;
+    const available = vehicles.filter((v) => v.status === "Available").length;
+    const inShop = vehicles.filter((v) => v.status === "In Shop").length;
+    const active = trips.filter((t) => t.status === "On Trip" || t.status === "Dispatched").length;
+    const pending = trips.filter((t) => t.status === "Draft").length;
+    const onDuty = drivers.filter((d) => d.status === "Available" || d.status === "On Trip").length;
+    const utilization = total ? Math.round(((total - available) / total) * 100) : 0;
+    return { total, available, inShop, active, pending, onDuty, utilization };
+  }, [vehicles, drivers, trips]);
+
+  const statusCounts = useMemo(() => {
+    const counts = { "On Trip": 0, "In Shop": 0, Retired: 0, Available: 0 };
+    filtered.forEach((v) => (counts[v.status] = (counts[v.status] || 0) + 1));
+    return counts;
+  }, [filtered]);
+
+  const recentTrips = trips.slice(-4).reverse();
+  const nameOf = (id, list, key = "name") =>
+    list.find((x) => x.id === id)?.[key] || "—";
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Dashboard</h1>
+          <p className="text-sm text-gray-500">Fleet snapshot &amp; today&apos;s activity.</p>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div data-testid="dashboard-filters" className="to-card p-4 flex flex-wrap gap-3">
+        <select value={type} onChange={(e) => setType(e.target.value)} className="to-input w-auto min-w-[160px]" data-testid="filter-type">
+          <option>All</option><option>Van</option><option>Truck</option><option>Mini</option>
+        </select>
+        <select value={status} onChange={(e) => setStatus(e.target.value)} className="to-input w-auto min-w-[160px]" data-testid="filter-status">
+          <option>All</option><option>Available</option><option>On Trip</option><option>In Shop</option><option>Retired</option>
+        </select>
+        <select value={region} onChange={(e) => setRegion(e.target.value)} className="to-input w-auto min-w-[160px]" data-testid="filter-region">
+          <option>All</option><option>North</option><option>South</option><option>East</option><option>West</option>
+        </select>
+      </div>
+
+      {/* KPI grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-4">
+        <KpiCard testid="kpi-active-vehicles" label="Active vehicles" value={kpis.total} icon={Truck} accent="slate" />
+        <KpiCard testid="kpi-available" label="Available" value={kpis.available} icon={CheckCircle2} accent="emerald" />
+        <KpiCard testid="kpi-in-shop" label="In maintenance" value={kpis.inShop} icon={Wrench} accent="amber" />
+        <KpiCard testid="kpi-active-trips" label="Active trips" value={kpis.active} icon={Route} accent="sky" />
+        <KpiCard testid="kpi-pending" label="Pending trips" value={kpis.pending} icon={Clock} accent="indigo" />
+        <KpiCard testid="kpi-on-duty" label="Drivers on duty" value={kpis.onDuty} icon={Users} accent="rose" />
+        <KpiCard testid="kpi-utilization" label="Fleet utilization" value={`${kpis.utilization}%`} icon={Gauge} accent="amber" />
+      </div>
+
+      {/* Recent trips + Vehicle status */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2 to-card overflow-hidden">
+          <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+            <div className="text-sm font-bold text-slate-900">Recent trips</div>
+            <div className="text-xs text-gray-500">{recentTrips.length} shown</div>
+          </div>
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="to-th">Trip</th>
+                <th className="to-th">Vehicle</th>
+                <th className="to-th">Driver</th>
+                <th className="to-th">Status</th>
+                <th className="to-th">ETA</th>
+              </tr>
+            </thead>
+            <tbody data-testid="dashboard-recent-trips">
+              {recentTrips.map((t) => (
+                <tr key={t.id} className="hover:bg-gray-50 transition">
+                  <td className="to-td font-mono text-slate-900 font-semibold">{t.id}</td>
+                  <td className="to-td">{nameOf(t.vehicleId, vehicles)}</td>
+                  <td className="to-td">{nameOf(t.driverId, drivers)}</td>
+                  <td className="to-td"><StatusBadge status={t.status} /></td>
+                  <td className="to-td text-gray-600">{t.status === "Completed" ? "—" : t.plannedDistance ? `~${t.plannedDistance} km` : "Awaiting vehicle"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="to-card p-5">
+          <div className="text-sm font-bold text-slate-900 mb-4">Vehicle status</div>
+          {Object.entries(statusCounts).map(([label, count]) => {
+            const total = filtered.length || 1;
+            const pct = Math.round((count / total) * 100);
+            const bar = {
+              "On Trip": "bg-sky-500",
+              "In Shop": "bg-amber-500",
+              Retired: "bg-red-500",
+              Available: "bg-emerald-500",
+            }[label];
+            return (
+              <div key={label} className="mb-3 last:mb-0">
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-gray-600 font-medium">{label}</span>
+                  <span className="text-gray-500 tabular-nums">{count} · {pct}%</span>
+                </div>
+                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className={`h-full ${bar} transition-all`} style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}

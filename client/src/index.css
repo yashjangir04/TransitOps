@@ -1,0 +1,95 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-navy: #0f172a;
+  --brand-navy-2: #111827;
+  --brand-amber: #f59e0b;
+  --brand-amber-dark: #d97706;
+  --page-bg: #f3f4f6;
+  --card-border: #e5e7eb;
+  --text-primary: #0f172a;
+  --text-muted: #6b7280;
+}
+
+body {
+  margin: 0;
+  font-family:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--page-bg);
+  color: var(--text-primary);
+}
+
+code,
+.font-mono {
+  font-family: "JetBrains Mono", Menlo, monospace;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+@layer components {
+  .to-card {
+    @apply bg-white border border-gray-200 rounded-xl;
+  }
+  .to-input {
+    @apply w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm
+           focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400
+           placeholder:text-gray-400 transition;
+  }
+  .to-label {
+    @apply block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5;
+  }
+  .to-btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 text-white
+           text-sm font-semibold shadow-sm hover:bg-amber-600 active:bg-amber-700
+           transition disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .to-btn-ghost {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-700
+           text-sm font-semibold border border-gray-200 hover:bg-gray-50 transition;
+  }
+  .to-th {
+    @apply px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider;
+  }
+  .to-td {
+    @apply px-4 py-3 text-sm text-gray-800 border-t border-gray-100;
+  }
+  .to-badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+}
+
+/* animate fade */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-fade-in {
+  animation: fadeInUp 0.35s ease both;
+}
