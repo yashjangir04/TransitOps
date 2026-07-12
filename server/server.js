@@ -5,6 +5,7 @@ dotenv.config();
 
 const authRoutes = require('./routes/authRoutes');
 const tripRoutes = require('./routes/tripRoutes');
+const driverRoutes = require('./routes/driverRoutes');
 
 const app = express();
 
@@ -16,7 +17,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/auth', authRoutes);
-// app.use('/api/trips', tripRoutes);
+app.use('/api/trips', tripRoutes);
+app.use('/api/drivers', driverRoutes);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
